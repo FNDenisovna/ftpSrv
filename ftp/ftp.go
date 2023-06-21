@@ -3,8 +3,10 @@ package ftp
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -27,7 +29,7 @@ func (c *FtpConn) Serve() {
 		case "ls":
 			c.LsCommand()
 		case "get":
-			//
+			c.GetCommand(args)
 		case "close":
 			return
 		}
@@ -78,4 +80,23 @@ func (c *FtpConn) HelpCommand() {
 	fmt.Fprintln(*c.Conn, "\t* cd\tset new work directory for client, need 1 argument - new dir-path")
 	fmt.Fprintln(*c.Conn, "\t* ls\treturn list of directories and files in work-dir")
 	fmt.Fprintln(*c.Conn, "\t* get\treturn file from work-dir, need 1 argument - files name")
+}
+
+func (c *FtpConn) GetCommand(args []string) {
+	if len(args) == 0 {
+		_, _ = fmt.Fprintln(*c.Conn, "Command GET need 1 argument-FILENAME. Try again.")
+		return
+	}
+
+	path := filepath.Join(c.WorkDir, args[0])
+	file, err := os.Open(path)
+	if err != nil {
+	}
+
+	_, err = io.Copy(*c.Conn, file)
+	if err != nil {
+		log.Print(err)
+		return
+	}
+	io.WriteString(*c.Conn, "\r\n")
 }
